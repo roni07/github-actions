@@ -4,7 +4,10 @@ on:
   pull_request:
     branches:
       - develop
-    types: [opened, synchronize, closed]
+
+permissions:
+  contents: write  # This allows the workflow to push to the repository
+  pull-requests: write # Allows the workflow to manage PRs
 
 jobs:
   merge-to-uat:
@@ -29,4 +32,4 @@ jobs:
 
       - name: Push changes to uat branch
         run: |
-          git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/roni07/github-actions.git uat
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/roni07/github-actions.git uat
