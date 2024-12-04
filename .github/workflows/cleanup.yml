@@ -1,0 +1,22 @@
+name: Cleanup Branches
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  cleanup-merged-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Delete merged branches
+        run: |
+          # Fetch all branches from the remote
+          git fetch --all
+          # List all remote branches merged into master
+          git branch -r --merged master | grep -v '\->' | grep -v 'master\|develop\|uat' | sed 's/origin\///' | while read branch; do
+            # Delete the branch remotely
+            git push origin --delete $branch
+          done

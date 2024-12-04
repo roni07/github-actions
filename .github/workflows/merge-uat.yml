@@ -1,0 +1,21 @@
+name: Merge to UAT
+
+on:
+  pull_request:
+    branches:
+      - develop
+    types: [opened, synchronize, closed]
+
+jobs:
+  merge-to-uat:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && github.base_ref == 'develop'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Merge develop into uat
+        run: |
+          git fetch origin uat
+          git checkout uat
+          git merge origin/develop
+          git push origin uat
