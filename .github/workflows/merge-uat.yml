@@ -13,9 +13,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      - name: Fetch latest changes from remote
+        run: git fetch origin
       - name: Merge develop into uat
         run: |
-          git fetch origin uat
           git checkout uat
-          git merge origin/develop
+          git merge origin/develop --allow-unrelated-histories
           git push origin uat
+
