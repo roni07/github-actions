@@ -22,9 +22,9 @@ jobs:
       - name: Fetch latest changes from remote
         run: git fetch origin
 
-      - name: Merge develop into uat
+      - name: Merge develop into uat with ours strategy
         run: |
           git checkout uat
-          git merge origin/develop --allow-unrelated-histories
+          git merge origin/develop --allow-unrelated-histories -X ours
           git push origin uat
 
