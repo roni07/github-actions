@@ -17,6 +17,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Debug PR event details
+        run: |
+          echo "PR merged: ${{ github.event.pull_request.merged }}"
+          echo "Base branch: ${{ github.event.pull_request.base.ref }}"
+
       - name: Set Git user info
         run: |
           git config --global user.name "roni07"
