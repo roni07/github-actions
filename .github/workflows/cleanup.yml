@@ -1,24 +1,25 @@
-name: Cleanup Branches
+name: Print Merged Branches
 
 on:
   push:
     branches:
-      - master
+      - master # Run the action when code is pushed to master
 
 jobs:
-  cleanup-merged-branches:
+  list-merged-branches:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Delete merged branches
+        uses: actions/checkout@v4
+
+      - name: Print merged branches
         run: |
           # Fetch all branches
           git fetch --prune
-          # Loop through merged PR branches and delete
-          for branch in $(git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||'); do
-            echo "Deleting branch: $branch"
-            git branch -d "$branch" 2>/dev/null || git branch -D "$branch" || echo "Branch $branch does not exist locally."
-            git push origin --delete "$branch" || echo "Branch $branch does not exist remotely."
-          done
 
+          # Loop through merged PR branches and print their names
+          echo "Merged PR branches:"
+          for branch in $(git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||'); do
+            echo "$branch"
+          done
