@@ -20,14 +20,11 @@ jobs:
           # Get the merged branches into the master branch
           echo "Identifying merged branches to delete from master..."
           
-          # Get the list of merged branches excluding the most recent merge
+          # Get the list of merged branches
           merged_branches=$(git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||')
-          
-          # Get the total number of merged branches
-          total_branches=$(echo "$merged_branches" | wc -l)
-          
-          # Skip the last branch (most recent merge)
-          branches_to_delete=$(echo "$merged_branches" | head -n $(($total_branches - 1)))
+
+          # Skip the latest merged branch by using tail
+          branches_to_delete=$(echo "$merged_branches" | tail -n +2)
 
           # Print the branches to be deleted
           echo "Branches to delete: $branches_to_delete"
