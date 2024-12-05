@@ -1,9 +1,9 @@
 name: Delete Merged Branches
 
 on:
-  push:
+  pull_request:
     branches:
-      - master  # Runs when code is pushed to the master branch
+      - master  # Trigger the action when a PR is opened/updated against master
 
 jobs:
   delete-merged-branches:
@@ -15,16 +15,19 @@ jobs:
         with:
           fetch-depth: 0  # Fetch full history to ensure all merged PRs are included
 
-      - name: Delete merged branches (excluding the last one)
+      - name: Identify the actual base branch
         run: |
-          # Fetch all branches to ensure the local reference is up to date
-          git fetch --prune
+          # Get the base branch from the PR (the branch of the original repo)
+          echo "Base branch: ${{ github.event.pull_request.base.ref }}"
+          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
 
-          # Get all merged PR branches except the most recent one
-          echo "Deleting merged PR branches (excluding the last one):"
+          # Fetch the base branch from the original repository
+          git fetch origin "$BASE_BRANCH"
+
+          # Print the branches merged into the base branch (not the fork branch)
+          echo "Merged PR branches (excluding the last one):"
           
-          # List all merged branches and exclude the most recent one
-          branches=$(git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||')
+          branches=$(git log --merges --oneline "$BASE_BRANCH" | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||')
 
           # Skip the first branch in the list (which is the most recent merge)
           branches_to_delete=$(echo "$branches" | tail -n +2)
