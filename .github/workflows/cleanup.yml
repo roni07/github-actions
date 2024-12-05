@@ -20,11 +20,14 @@ jobs:
           # Fetch all branches to ensure the local reference is up to date
           git fetch --prune
 
-          # Get merged PR branches (excluding the most recent merge)
+          # Get all merged PR branches except the most recent one
           echo "Merged PR branches (excluding the last one):"
-          branches=$(git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||')
-          # Skip the last merged branch (head)
-          branches_to_print=$(echo "$branches" | head -n -1)
           
-          # Print the branches
+          # List all merged branches and exclude the most recent one
+          branches=$(git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||')
+
+          # Skip the first branch in the list (which is the most recent merge)
+          branches_to_print=$(echo "$branches" | tail -n +2)
+
+          # Print the remaining branches
           echo "$branches_to_print"
