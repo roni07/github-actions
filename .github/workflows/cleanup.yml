@@ -15,19 +15,25 @@ jobs:
         with:
           fetch-depth: 0  # Fetch full history to ensure all merged PRs are included
 
-      - name: Delete merged branches from master
+      - name: Delete merged branches excluding the last merged one
         run: |
-          # Get the merged branches into the master branch (exclude the most recent merge)
+          # Get the merged branches into the master branch
           echo "Identifying merged branches to delete from master..."
           
-          # Get the list of merged branches excluding the most recent one
-          branches=$(git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||')
+          # Get the list of merged branches excluding the most recent merge
+          merged_branches=$(git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||')
           
+          # Get the total number of merged branches
+          total_branches=$(echo "$merged_branches" | wc -l)
+          
+          # Skip the last branch (most recent merge)
+          branches_to_delete=$(echo "$merged_branches" | head -n $(($total_branches - 1)))
+
           # Print the branches to be deleted
-          echo "Branches to delete: $branches"
+          echo "Branches to delete: $branches_to_delete"
 
           # Loop through and delete the branches
-          for branch in $branches; do
+          for branch in $branches_to_delete; do
             # Check if the branch exists locally
             if git show-ref --verify --quiet refs/heads/"$branch"; then
               echo "Deleting local branch: $branch"
