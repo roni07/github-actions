@@ -11,16 +11,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
-      - name: Fetch all branches
-        run: |
-          git fetch --all
-          git remote prune origin
-
       - name: Delete merged branches
         run: |
-          # List all remote branches merged into master
-          git branch -r --merged origin/master | grep -v '\->' | grep -v 'master\|develop\|uat' | sed 's/origin\///' | while read branch; do
+          # Fetch all branches
+          git fetch --prune
+          # Loop through merged PR branches and delete
+          for branch in $(git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||'); do
             echo "Deleting branch: $branch"
-            git push origin --delete $branch
+            git branch -d "$branch" 2>/dev/null || git branch -D "$branch" || echo "Branch $branch does not exist locally."
+            git push origin --delete "$branch" || echo "Branch $branch does not exist remotely."
           done
+
