@@ -1,9 +1,9 @@
 name: Delete Merged Branches
 
 on:
-  pull_request:
+  push:
     branches:
-      - master  # Trigger the action when a PR is opened/updated against master
+      - master  # Trigger the action when something is pushed to the master branch
 
 jobs:
   delete-merged-branches:
@@ -15,28 +15,32 @@ jobs:
         with:
           fetch-depth: 0  # Fetch full history to ensure all merged PRs are included
 
-      - name: Identify the actual base branch
+      - name: Delete merged branches from master
         run: |
-          # Get the base branch from the PR (the branch of the original repo)
-          echo "Base branch: ${{ github.event.pull_request.base.ref }}"
-          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
-
-          # Fetch the base branch from the original repository
-          git fetch origin "$BASE_BRANCH"
-
-          # Print the branches merged into the base branch (not the fork branch)
-          echo "Merged PR branches (excluding the last one):"
+          # Get the merged branches into the master branch (exclude the most recent merge)
+          echo "Identifying merged branches to delete from master..."
           
-          branches=$(git log --merges --oneline "$BASE_BRANCH" | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||')
-
-          # Skip the first branch in the list (which is the most recent merge)
-          branches_to_delete=$(echo "$branches" | tail -n +2)
+          # Get the list of merged branches excluding the most recent one
+          branches=$(git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||')
+          
+          # Print the branches to be deleted
+          echo "Branches to delete: $branches"
 
           # Loop through and delete the branches
-          for branch in $branches_to_delete; do
-            echo "Deleting branch: $branch"
-            # Delete the local branch
-            git branch -d "$branch" 2>/dev/null || git branch -D "$branch"
-            # Delete the remote branch
-            git push origin --delete "$branch" || echo "Branch $branch does not exist remotely."
+          for branch in $branches; do
+            # Check if the branch exists locally
+            if git show-ref --verify --quiet refs/heads/"$branch"; then
+              echo "Deleting local branch: $branch"
+              git branch -d "$branch" || git branch -D "$branch"
+            else
+              echo "Branch $branch does not exist locally, skipping..."
+            fi
+
+            # Check if the branch exists remotely
+            if git ls-remote --exit-code --heads origin "$branch"; then
+              echo "Deleting remote branch: $branch"
+              git push origin --delete "$branch" || echo "Failed to delete remote branch $branch."
+            else
+              echo "Branch $branch does not exist remotely, skipping..."
+            fi
           done
