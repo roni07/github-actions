@@ -15,13 +15,16 @@ jobs:
         with:
           fetch-depth: 0  # Fetch full history to ensure all merged PRs are included
 
-      - name: Print merged branches
+      - name: Print merged branches (excluding the last one)
         run: |
           # Fetch all branches to ensure the local reference is up to date
           git fetch --prune
 
-          # Loop through merged PR branches and print their names
-          echo "Merged PR branches:"
-          for branch in $(git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||'); do
-            echo "$branch"
-          done
+          # Get merged PR branches (excluding the most recent merge)
+          echo "Merged PR branches (excluding the last one):"
+          branches=$(git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||')
+          # Skip the last merged branch (head)
+          branches_to_print=$(echo "$branches" | head -n -1)
+          
+          # Print the branches
+          echo "$branches_to_print"
