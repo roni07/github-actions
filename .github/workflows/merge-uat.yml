@@ -4,10 +4,7 @@ on:
   pull_request:
     branches:
       - develop
-
-permissions:
-  contents: write  # This allows the workflow to push to the repository
-  pull-requests: write # Allows the workflow to manage PRs
+    types: [opened, synchronize, closed]
 
 jobs:
   merge-to-uat:
@@ -17,16 +14,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Debug PR event details
-        run: |
-          echo "PR merged: ${{ github.event.pull_request.merged }}"
-          echo "Base branch: ${{ github.event.pull_request.base.ref }}"
-
       - name: Set Git user info
         run: |
           git config --global user.name "roni07"
           git config --global user.email "mdmehedihasanroni28@gmail.com"
-
       - name: Fetch latest changes from remote
         run: git fetch origin
 
@@ -34,7 +25,6 @@ jobs:
         run: |
           git checkout uat
           git merge origin/develop --allow-unrelated-histories -X ours
-
       - name: Push changes to uat branch
         run: |
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/roni07/github-actions.git uat
+          git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/roni07/github-actions.git uat
