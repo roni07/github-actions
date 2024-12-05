@@ -16,7 +16,11 @@ jobs:
           # Fetch all branches from the remote
           git fetch --all
           # List all remote branches merged into master
-          git log --merges --oneline master | grep -E 'Merge pull request' | while read branch; do
-            # Delete the branch remotely
-            git push origin --delete $branch
+          git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | while read branch; do
+          # Remove any leading/trailing whitespace from the branch name
+          branch=$(echo $branch | xargs)
+  
+          # Delete the branch remotely
+          git push origin --delete "$branch"
           done
+
