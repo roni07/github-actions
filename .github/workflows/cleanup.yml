@@ -1,4 +1,4 @@
-name: Print Merged Branches
+name: Delete Merged Branches
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - master  # Runs when code is pushed to the master branch
 
 jobs:
-  list-merged-branches:
+  delete-merged-branches:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,19 +15,25 @@ jobs:
         with:
           fetch-depth: 0  # Fetch full history to ensure all merged PRs are included
 
-      - name: Print merged branches (excluding the last one)
+      - name: Delete merged branches (excluding the last one)
         run: |
           # Fetch all branches to ensure the local reference is up to date
           git fetch --prune
 
           # Get all merged PR branches except the most recent one
-          echo "Merged PR branches (excluding the last one):"
+          echo "Deleting merged PR branches (excluding the last one):"
           
           # List all merged branches and exclude the most recent one
           branches=$(git log --merges --oneline master | grep -E 'Merge pull request' | awk -F'from ' '{print $2}' | sed 's|^[^/]*/||')
 
           # Skip the first branch in the list (which is the most recent merge)
-          branches_to_print=$(echo "$branches" | tail -n +2)
+          branches_to_delete=$(echo "$branches" | tail -n +2)
 
-          # Print the remaining branches
-          echo "$branches_to_print"
+          # Loop through and delete the branches
+          for branch in $branches_to_delete; do
+            echo "Deleting branch: $branch"
+            # Delete the local branch
+            git branch -d "$branch" 2>/dev/null || git branch -D "$branch"
+            # Delete the remote branch
+            git push origin --delete "$branch" || echo "Branch $branch does not exist remotely."
+          done
