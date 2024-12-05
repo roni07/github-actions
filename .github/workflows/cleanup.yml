@@ -3,19 +3,21 @@ name: Print Merged Branches
 on:
   push:
     branches:
-      - master # Run the action when code is pushed to master
+      - master  # Runs when code is pushed to the master branch
 
 jobs:
   list-merged-branches:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository with full history
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history to ensure all merged PRs are included
 
       - name: Print merged branches
         run: |
-          # Fetch all branches
+          # Fetch all branches to ensure the local reference is up to date
           git fetch --prune
 
           # Loop through merged PR branches and print their names
